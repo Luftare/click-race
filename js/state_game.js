@@ -25,7 +25,7 @@ gameStates.game = {
 
 		this.myPoints = 0;
 		this.myIncome = 1;
-		this.boostMaxCooldown = 100;
+		this.boostMaxCooldown = 10000;
 		this.boosts = game.add.group();
 		this.boosts.y = this.boostY;
 
@@ -84,6 +84,7 @@ gameStates.game = {
 		var boostIndex = Math.floor(Math.random()*rarityCount);
 
 		var dt = Date.now() - this.gameStartTime;
+		dt = 1;
 		var add = null;
 		var mult = null;
 
