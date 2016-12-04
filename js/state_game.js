@@ -25,7 +25,7 @@ gameStates.game = {
 
 		this.myPoints = 0;
 		this.myIncome = 1;
-		this.boostMaxCooldown = 500;
+		this.boostMaxCooldown = 100;
 		this.boosts = game.add.group();
 		this.boosts.y = this.boostY;
 
@@ -75,14 +75,19 @@ gameStates.game = {
 	},
 
 	createBoost: function () {
-		var rarity = Math.floor(Math.random()*this.boostsLibrary.length);
+		var weightedRand = Math.pow(Math.random(),6);
+		var variance = 0.2;
+		var varianceMultiplier = 1 - variance + variance*2*Math.random();
+
+		var rarity = Math.floor(weightedRand*this.boostsLibrary.length);
 		var rarityCount = this.boostsLibrary[rarity].length;
 		var boostIndex = Math.floor(Math.random()*rarityCount);
 
 		var dt = Date.now() - this.gameStartTime;
+		var add = null;
+		var mult = null;
 
-		var add = rarity < 2? Math.ceil(dt*( Math.pow(rarity+1,0.5) )*0.001) : null;
-		var mult = rarity < 2? null : Math.ceil( 10*(1 + Math.pow(rarity,1)*dt/10000) )/10;
+		add = rarity + Math.ceil(varianceMultiplier*dt*(Math.pow(rarity+1,1))*0.0001);
 
 		return {
 			name: this.boostsLibrary[rarity][boostIndex],
@@ -90,7 +95,7 @@ gameStates.game = {
 			cost: 0,
 			add: add,
 			mult: mult
-		}
+		};
 	},
 
 	onClick: function () {
