@@ -262,14 +262,17 @@ gameStates.game = {
 	},
 
 	applyBoost: function (boost) {
-		//TODO: do eye candy
 		var icon = game.add.sprite(game.camera.width/2,game.camera.height/2,boost.name);
 		icon.anchor.setTo(0.5,0.5);
-		var tween = game.add.tween(icon.scale).to({x:1.2, y:1.2},700,Phaser.Easing.Back.InOut,true);
+		var tween = game.add.tween(icon.scale).to({x:1.3, y:1.3},300,Phaser.Easing.Quadratic.Out,true);
 		tween.onComplete.add(function () {
-			icon.destroy();
+			this.starEmitter.start(true, 3000, null, 10);
+			var shrink = game.add.tween(icon.scale).to({x:0, y:0},300,Phaser.Easing.Quadratic.In,true);
+			shrink.onComplete.add(function () {
+				icon.destroy();
+			},this);
 		}, this);
-		this.starEmitter.start(true, 3000, null, 10);
+
 		this.myIncome += boost.value;
 		this.myIncome = Math.floor(this.myIncome);
 		this.incomeText.text = this.myIncome;
