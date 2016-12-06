@@ -225,7 +225,7 @@ gameStates.game = {
 
 	onBoostClick: function (sprite,boost) {
 		if(!this.waitingBoostResponse && !this.pendingBoost){
-			this.waitingBoostResponse = true;
+			this.waitingBoostResponse = true;//disable purchase of further boosts if there's no reply yet
 			this.boosts.remove(sprite,false,true);//remove boost, someone will get it anyway
 			this.requestBoost(boost,
 				(function () {//success
@@ -248,7 +248,7 @@ gameStates.game = {
 
 	requestBoost: function (boost,onsuccess,onfail) {
 		//send request to server
-		var latency = Math.random()*0+120;
+		var latency = Math.random()*0+100;
 		// latency = 0;
 		var fn = function fn() {
 			if(Math.random()>0.1){
