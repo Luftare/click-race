@@ -4,7 +4,6 @@ gameStates.game = {
 	},
 
 	preload: function(){
-
 		this.gameStartTime = Date.now();
 		this.crossedFinishline = false;
 
@@ -76,6 +75,14 @@ gameStates.game = {
 		this.incomeText.anchor.setTo(0.5,0.5);
 		this.clicker.addChild(this.incomeText)
 
+	},
+
+	getPlayer: function (id) {//TODO make sure all players are in this list and their data is in properties
+		this.playersContainer.forEach(function (p) {
+			if(p.id === id){
+				return p;
+			}
+		},this);
 	},
 
 	create: function () {
