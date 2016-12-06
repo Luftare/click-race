@@ -34,6 +34,13 @@ rarity 0 1 2 3 4 5
 		game.load.image("car0","images/car0.png");
 		game.load.image("car1","images/car1.png");
 		game.load.image("car2","images/car2.png");
+
+		game.load.image("particle0","images/particle0.png");
+		game.load.image("particle1","images/particle1.png");
+		game.load.image("particle2","images/particle2.png");
+		game.load.image("particle3","images/particle3.png");
+
+		game.load.image("star","images/star.png");
 	},
 
 	create: function () {
