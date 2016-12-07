@@ -77,7 +77,28 @@ gameStates.game = {
 
 	},
 
-	getPlayer: function (id) {//TODO make sure all players are in this list and their data is in properties
+	createLocalPlayer: function () {
+		var car = {
+			sprite: "car0",
+			points: 0,
+			id: Date.now()
+		};
+		this.myCar = this.addPlayer(car);
+	},
+
+	addPlayer: function (data) {
+		var car = this.playersContainer.create(0,0,data.sprite);
+		car.anchor.setTo(1,0.5);
+		car.x = this.playerTrackWidth*(0-0.5);
+		car.playerData = data;
+		return car;
+	},
+
+	removePlayer: function () {
+
+	},
+
+	getPlayer: function (id) {
 		this.playersContainer.forEach(function (p) {
 			if(p.id === id){
 				return p;
@@ -90,10 +111,17 @@ gameStates.game = {
 			this.addBoost(this.createBoost());
 		}
 		this.positionBoosts();
-
-	 	this.myCar = this.playersContainer.create(0,0,"car1");
-		this.myCar.anchor.setTo(1,0.5);
-		this.myCar.x = this.playerTrackWidth*(0-0.5);
+		this.createLocalPlayer();
+		this.addPlayer({
+			sprite: "car1",
+			points: 0,
+			id: Date.now()+1
+		})
+		this.addPlayer({
+			sprite: "car2",
+			points: 0,
+			id: Date.now()+2
+		})
 	},
 
 	createBoost: function () {
@@ -115,9 +143,9 @@ gameStates.game = {
 
 	onClick: function () {
 		if(!this.crossedFinishline){
-			this.myPoints += this.myIncome;
-			this.counterText.text = this.myPoints;
-			if(this.myPoints >= this.targetPoints){
+			this.myCar.playerData.points += this.myIncome;
+			this.counterText.text = this.myCar.playerData.points;
+			if(this.myCar.playerData.points >= this.targetPoints){
 				this.onCrossFinishline();
 			}
 		}
@@ -176,10 +204,13 @@ gameStates.game = {
 				this.onBoostCooldownFinish(this.pendingBoost);
 			}
 		}
+		var index = 0;
 		this.playersContainer.forEach(function (p) {
-				if(!p.crossedFinishline){
-					p.x = this.playerTrackWidth*( (this.myPoints/this.targetPoints) - 0.5);
-				}
+			p.y = index*50;//TODO make this make sense...
+			index++;
+			if(!p.crossedFinishline){
+				p.x = this.playerTrackWidth*( (p.playerData.points/this.targetPoints) - 0.5);
+			}
 		},this);
 	},
 
