@@ -143,6 +143,8 @@ gameStates.game = {
 
 	onClick: function () {
 		if(!this.crossedFinishline){
+			this.clicker.scale.setTo(0.95,0.95);
+			game.add.tween(this.clicker.scale).to({x: 1, y:1},50,"Linear",true);
 			this.myCar.playerData.points += this.myIncome;
 			this.counterText.text = this.myCar.playerData.points;
 			if(this.myCar.playerData.points >= this.targetPoints){
