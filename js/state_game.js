@@ -42,6 +42,8 @@ gameStates.game = {
 
 		this.particleEmitter = game.add.emitter(game.camera.width/2, game.camera.height/2, 20);
 		this.particleEmitter.makeParticles(['particle0', 'particle1', 'particle2',"particle3"]);
+		this.particleEmitter.minParticleScale = 0.5;
+		this.particleEmitter.maxParticleScale = 1;
 		this.particleEmitter.start(false, 4000, 300);
 		this.particleEmitter.on = false;
 

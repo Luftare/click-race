@@ -44,7 +44,7 @@ rarity 0 1 2 3 4 5
 	},
 
 	create: function () {
-		game.state.start("game",true,false,this.data);
+		game.state.start("login",true,false,this.data);
 	}
 
 };

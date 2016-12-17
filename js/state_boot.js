@@ -7,7 +7,7 @@ gameStates.boot = {
 
 	create: function(){
 		game.physics.startSystem(Phaser.Physics.ARCADE);
-		game.stage.backgroundColor = "#252";
+		game.stage.backgroundColor = "#2a2";
 		game.state.start("load",true,false,this.data);
 	}
 }
