@@ -85,7 +85,7 @@ gameStates.game = {
 			points: 0,
 			id: Date.now()
 		};
-		this.myCar = this.addPlayer(car);
+		this.myCar = this.addPlayer(car,"jeppe");
 	},
 
 	addPlayer: function (data) {
@@ -93,6 +93,9 @@ gameStates.game = {
 		car.anchor.setTo(1,0.5);
 		car.x = this.playerTrackWidth*(0-0.5);
 		car.playerData = data;
+		var tag = game.add.text(15,0,"jou",this.mediumTextStyle);
+		tag.anchor.setTo(0,0.5);
+		car.addChild(tag)
 		return car;
 	},
 
@@ -299,7 +302,6 @@ gameStates.game = {
 				onfail();
 			}
 		};
-
 		setTimeout(fn,latency);
 	},
 
