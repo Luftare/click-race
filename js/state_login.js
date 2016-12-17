@@ -71,6 +71,10 @@ gameStates.login = {
 		this.pedal.events.onInputDown.add(function () {
 			this.playerName = this.inputField.value;
 			console.log(this.playerName,this.selectedCar.key);
+			this.data = {
+				name: this.playerName,
+				car: this.selectedCar.key
+			};
 			this.inputField.hidden = true;
 			game.state.start("game",true,false,this.data);
 		},this);

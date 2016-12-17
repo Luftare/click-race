@@ -81,11 +81,12 @@ gameStates.game = {
 
 	createLocalPlayer: function () {
 		var car = {
-			sprite: "car0",
+			sprite: this.data.car,
+			name: this.data.name,
 			points: 0,
 			id: Date.now()
 		};
-		this.myCar = this.addPlayer(car,"jeppe");
+		this.myCar = this.addPlayer(car);
 	},
 
 	addPlayer: function (data) {
@@ -93,7 +94,7 @@ gameStates.game = {
 		car.anchor.setTo(1,0.5);
 		car.x = this.playerTrackWidth*(0-0.5);
 		car.playerData = data;
-		var tag = game.add.text(15,0,"jou",this.mediumTextStyle);
+		var tag = game.add.text(15,0,data.name,this.mediumTextStyle);
 		tag.anchor.setTo(0,0.5);
 		car.addChild(tag)
 		return car;
