@@ -1,0 +1,8 @@
+{
+    "name": "click-race-server",
+    "main": "index.js",
+    "dependencies": {
+        "express": "*",
+        "socket.io": "*"
+    }
+}

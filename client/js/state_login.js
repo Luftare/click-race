@@ -117,7 +117,8 @@ gameStates.login = {
 	},
 
 	connect: function () {
-		game.state.start("game",true,false,this.data);
+		comms.login(this.data);
+		// game.state.start("wait");
 	},
 
 	setBouncing: function (u,amount) {

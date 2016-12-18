@@ -13,6 +13,12 @@ gameStates.wait = {
       car.body.velocity.x = 200*Math.random()+50;
       this.cars.push(car);
     }
+
+		this.header = game.add.text(game.camera.width/2, 80, "Waiting...", { font: "52px Arial Black", fill: "#111" });
+		this.header.anchor.setTo(0.5);
+		this.header.stroke = "#baf";
+		this.header.strokeThickness = 16;
+		this.header.setShadow(2, 2, "#333333", 2, true, false);
   },
 
   update: function () {

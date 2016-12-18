@@ -6,6 +6,7 @@ gameStates.game = {
 	preload: function(){
 		this.gameStartTime = Date.now();
 		this.crossedFinishline = false;
+		this.lastClientUpdateTime = Date.now();
 
 		this.boostsLibrary = [
 			["boost00","boost10","boost20","boost30"],
@@ -77,11 +78,40 @@ gameStates.game = {
 		this.incomeText.anchor.setTo(0.5,0.5);
 		this.clicker.addChild(this.incomeText)
 
+		this.onServerInitGame();
+	},
+
+	onServerInitGame: function () {
+		var players = this.data.players;
+		var player;
+		for (var i = 0; i < players.length; i++) {
+			player = this.addPlayer(players[i]);
+			if(players[i].id === comms.id) this.myCar = player;
+		}
+	},
+
+	onServerUpdate: function (players) {
+		if(game.state.current !== "game") return;
+		var car;
+		for (var i = 0; i < players.length; i++) {
+			if(players[i].id !== comms.id){
+				car = this.getPlayer(players[i].id);
+				if(car){
+					car.playerData.points = players[i].points;
+				}
+			}
+		}
+
+	},
+
+	onNewPlayer: function (player) {
+		if(game.state.current !== "game") return;
+		this.addPlayer(player);
 	},
 
 	createLocalPlayer: function () {
 		var car = {
-			sprite: this.data.car,
+			car: this.data.car,
 			name: this.data.name,
 			points: 0,
 			id: Date.now()
@@ -90,26 +120,36 @@ gameStates.game = {
 	},
 
 	addPlayer: function (data) {
-		var car = this.playersContainer.create(0,0,data.sprite);
+		var car = this.playersContainer.create(0,0,data.car);
 		car.anchor.setTo(1,0.5);
 		car.x = this.playerTrackWidth*(0-0.5);
 		car.playerData = data;
 		var tag = game.add.text(15,0,data.name,this.mediumTextStyle);
 		tag.anchor.setTo(0,0.5);
 		car.addChild(tag)
+		if(data.id === comms.id) this.myCar = car;
 		return car;
 	},
 
-	removePlayer: function () {
-
+	removePlayer: function (player) {
+		if(game.state.current !== "game") return;
+		this.playersContainer.forEach(function (p) {
+			console.log(p.playerData.id,p.playerData,p,player,player.id)
+			if(p.playerData.id === player.id){
+				p.destroy();
+			}
+		})
 	},
 
 	getPlayer: function (id) {
+		var result;
 		this.playersContainer.forEach(function (p) {
-			if(p.id === id){
-				return p;
+			if(p.playerData.id === id){
+				result = p;
+				return;
 			}
 		},this);
+		return result;
 	},
 
 	create: function () {
@@ -117,17 +157,6 @@ gameStates.game = {
 			this.addBoost(this.createBoost());
 		}
 		this.positionBoosts();
-		this.createLocalPlayer();
-		this.addPlayer({
-			sprite: "car1",
-			points: 0,
-			id: Date.now()+1
-		})
-		this.addPlayer({
-			sprite: "car2",
-			points: 0,
-			id: Date.now()+2
-		})
 	},
 
 	createBoost: function () {
@@ -148,7 +177,7 @@ gameStates.game = {
 	},
 
 	onClick: function () {
-		if(!this.crossedFinishline){
+		if(!this.crossedFinishline && this.myCar){
 			this.clicker.scale.setTo(0.95,0.95);
 			game.add.tween(this.clicker.scale).to({x: 1, y:1},50,"Linear",true);
 			this.myCar.playerData.points += this.myIncome;
@@ -207,6 +236,12 @@ gameStates.game = {
 	},
 
 	update: function () {
+		var now = Date.now();
+		if(now - this.lastClientUpdateTime >= comms.clientUpdateDt){
+			this.lastClientUpdateTime = now;
+			comms.emitClientUpdate(this.myCar.playerData);
+		}
+
 		if(this.pendingBoost){
 			if(Date.now() - this.pendingBoost.spawnThen > this.boostMaxCooldown){
 				this.onBoostCooldownFinish(this.pendingBoost);
@@ -214,7 +249,7 @@ gameStates.game = {
 		}
 		var index = 0;
 		this.playersContainer.forEach(function (p) {
-			p.y = index*50;//TODO make this make sense...
+			p.y = index*50;
 			index++;
 			if(!p.crossedFinishline){
 				p.x = this.playerTrackWidth*( (p.playerData.points/this.targetPoints) - 0.5);

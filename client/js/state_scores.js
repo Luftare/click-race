@@ -29,6 +29,7 @@ gameStates.scores = {
 		this.header.setShadow(2, 2, "#333333", 2, true, false);
 
 		var cars = [];
+		
 		cars.push({
 			sprite: "car0",
 			name: "Jeppe",
