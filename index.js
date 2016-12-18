@@ -13,7 +13,7 @@ app.use('/',express.static(__dirname +'/client'));
 
 http.listen(port, function(){
   console.log('listening port:'+port);
-	startState(GAME);
+	state = GAME;
 });
 
 var sockets = {};
@@ -22,13 +22,13 @@ var players = [];
 var boosts = [];
 
 var state = "game";
-var serverUpdateDt = 1000;
+var serverUpdateDt = 300;
 var SCORES = "scores";
 var GAME = "game";
 var boostIdCounter = 1;
 var stateTimes = {
 	game: 5000,
-	scores: 3000
+	scores: 1000
 };
 var stateTimeout;
 
@@ -43,7 +43,7 @@ var boostsLibrary = [
 io.sockets.on("connection", function (socket) {
 	sockets[socket.id] = socket;
 
-	socket.on("login", function (data) {
+	socket.on("login", function (data,cb) {
 		socket.player = {
 			id: socket.id,
 			points: 0,
@@ -51,6 +51,7 @@ io.sockets.on("connection", function (socket) {
 			car: data.car,
 			name: data.name
 		};
+		cb();
 		players.push(socket.player);
 		socket.emit("init_game",{
 			players: players,
@@ -78,6 +79,23 @@ io.sockets.on("connection", function (socket) {
 		if(isSuccess) socket.broadcast.emit("remove_boost",boost);
 	});
 
+	socket.on("request_victory", function () {
+		if(state === GAME){
+			state === SCORES;
+			//game over, you win!
+			io.sockets.emit("to_scores",players);
+			setTimeout(function () {
+				for (var i = 0; i < players.length; i++) {
+					players[i].points = 0;
+				}
+				io.sockets.emit("init_game",{
+					players: players,
+					boosts: boosts
+				});
+			},players.length*2000)
+		}
+	});
+
 	socket.on("disconnect", function () {
 		io.sockets.emit("player_disconnected",socket.player);
 		delete sockets[socket.id];
@@ -92,7 +110,7 @@ io.sockets.on("connection", function (socket) {
 });
 
 function createBoost(){
-	var weightedRand = Math.pow(Math.random(),6);
+	var weightedRand = Math.pow(Math.random(),2);
 	var rarity = Math.floor(weightedRand*boostsLibrary.length);
 	var rarityCount = boostsLibrary[rarity].length;
 	var boostIndex = Math.floor(Math.random()*rarityCount);
@@ -107,6 +125,7 @@ function createBoost(){
 }
 
 setInterval(function () {//gameloop
+	if(state !== GAME) return;
 	if(boosts.length < 3){
 		var boost = createBoost();
 		boosts.push(boost);
@@ -114,16 +133,3 @@ setInterval(function () {//gameloop
 	}
 	io.sockets.emit("game_update",players);
 },serverUpdateDt);
-
-function startState(stateName){
-	state = stateName;
-	console.log("entering state: ",stateName)
-	stateTimeout = setTimeout(function () {
-		if(state === GAME){
-		//	startState(SCORES);
-		}
-		else if(state === SCORES){
-	//		startState(GAME);
-		}
-	},stateTimes[stateName]);
-}

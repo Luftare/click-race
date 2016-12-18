@@ -6,6 +6,9 @@ gameStates.login = {
   preload: function () {
 		var self = this;
 		this.inputField = document.getElementById("input_name");
+
+		this.inputField.style.top = Math.floor(window.innerHeight/2)-15+"px";
+
 		this.inputField.hidden = true;
 		this.emitterRect = new Phaser.Rectangle(0,0,game.camera.width/1,10);
 		this.particleEmitter = game.add.emitter(game.camera.width/2, -50, 200);
@@ -65,7 +68,7 @@ gameStates.login = {
 				},this);
 		},this);
 
-		this.pedal = game.add.sprite(game.camera.width/2,game.camera.height/2+50,"pedal");
+		this.pedal = game.add.sprite(game.camera.width/2,game.camera.height/2+70,"pedal");
 		this.pedal.anchor.setTo(0.5,0);
 		this.pedal.inputEnabled = false;
 		this.pedal.events.onInputDown.add(function () {
@@ -78,7 +81,7 @@ gameStates.login = {
 			this.connect();
 		},this);
 
-		this.header = game.add.text(game.camera.width/2,game.camera.height/2 - 100, "Select a car", { font: "52px Arial Black", fill: "#111" });
+		this.header = game.add.text(game.camera.width/2,game.camera.height/2 - 100, "Select a car", { font: "52px Arial", fill: "#111" });
 		this.header.anchor.setTo(0.5);
 		this.header.stroke = "#baf";
 		this.header.strokeThickness = 16;
@@ -118,7 +121,7 @@ gameStates.login = {
 
 	connect: function () {
 		comms.login(this.data);
-		// game.state.start("wait");
+		this.inputField.blur();
 	},
 
 	setBouncing: function (u,amount) {

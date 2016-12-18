@@ -23,7 +23,7 @@ gameStates.game = {
 		this.myPoints = 0;
 		this.myIncome = 1;
 		this.myCar = null;
-		this.boostMaxCooldown = 5000;
+		this.boostMaxCooldown = 10000;
 		this.boosts = game.add.group();
 		this.boosts.y = this.boostY;
 		this.waitingBoostResponse = false;
@@ -175,6 +175,7 @@ gameStates.game = {
 		this.myCar.crossedFinishline = true;
 		var startX = this.myCar.x;
 		game.add.tween(this.myCar).to({x: startX + 100},1000,Phaser.Easing.Quadratic.InOut,true);
+		comms.requestVictory();
 	},
 
 	hideBoosts: function () {
@@ -311,6 +312,7 @@ gameStates.game = {
 	},
 
 	removeBoost: function (boost) {
+		if(game.state.current !== "game") return;
 		if(!boost) return;
 		this.boosts.forEach(function (b) {
 			if(b.id === boost.id) b.destroy();
