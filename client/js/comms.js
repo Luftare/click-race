@@ -21,6 +21,10 @@ var comms = {
       game.state.start("game",true,false,data);
     });
 
+    socket.on("boost_spawn",function (boost) {
+      gameStates.game.onBoostSpawn(boost);
+    });
+
     socket.on("player_disconnected",function (player) {
       gameStates.game.removePlayer(player);
     });
@@ -36,6 +40,11 @@ var comms = {
 
   emitClientUpdate: function (data) {
     comms.socket.emit("client_update",data);
+  },
+
+  requestBoost: function (boost,cb){
+    console.log(cb)
+    comms.socket.emit("request_boost",boost,cb);
   },
 
   login: function (data) {

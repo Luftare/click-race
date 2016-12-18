@@ -16,18 +16,29 @@ http.listen(port, function(){
 	startState(GAME);
 });
 
-var players = [];
 var sockets = {};
+
+var players = [];
+var boosts = [];
 
 var state = "game";
 var serverUpdateDt = 1000;
 var SCORES = "scores";
 var GAME = "game";
+var boostIdCounter = 1;
 var stateTimes = {
 	game: 5000,
 	scores: 3000
 };
 var stateTimeout;
+
+var boostsLibrary = [
+	["boost00","boost10","boost20","boost30"],
+	["boost21","boost31","boost41"],
+	["boost42","boost52"],
+	["boost53"]
+];
+
 
 io.sockets.on("connection", function (socket) {
 	sockets[socket.id] = socket;
@@ -42,13 +53,20 @@ io.sockets.on("connection", function (socket) {
 		};
 		players.push(socket.player);
 		socket.emit("init_game",{
-			players: players
+			players: players,
+			boosts: boosts
 		});
 		socket.broadcast.emit("player_connected",socket.player);
 	});
 
 	socket.on("client_update", function (data) {
-		socket.player.points = data.points;
+		if(socket.player && socket.player.points){
+				socket.player.points = data.points;
+		}
+	});
+
+	socket.on("request_boost", function (boost,cb) {
+		cb("HELLO!");
 	});
 
 	socket.on("disconnect", function () {
@@ -62,10 +80,29 @@ io.sockets.on("connection", function (socket) {
 		}
 	});
 
-
 });
 
-setInterval(function () {
+function createBoost(){
+	var weightedRand = Math.pow(Math.random(),6);
+	var rarity = Math.floor(weightedRand*boostsLibrary.length);
+	var rarityCount = boostsLibrary[rarity].length;
+	var boostIndex = Math.floor(Math.random()*rarityCount);
+
+	var add = rarity*2 + 1;
+
+	return {
+		name: boostsLibrary[rarity][boostIndex],
+		value: add,
+		id: boostIdCounter++
+	};
+}
+
+setInterval(function () {//gameloop
+	if(boosts.length < 3){
+		var boost = createBoost();
+		boosts.push(boost);
+		io.sockets.emit("boost_spawn",players);
+	}
 	io.sockets.emit("game_update",players);
 },serverUpdateDt);
 

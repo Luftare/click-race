@@ -8,12 +8,12 @@ gameStates.game = {
 		this.crossedFinishline = false;
 		this.lastClientUpdateTime = Date.now();
 
-		this.boostsLibrary = [
-			["boost00","boost10","boost20","boost30"],
-			["boost21","boost31","boost41"],
-			["boost42","boost52"],
-			["boost53"]
-		];
+		// this.boostsLibrary = [
+		// 	["boost00","boost10","boost20","boost30"],
+		// 	["boost21","boost31","boost41"],
+		// 	["boost42","boost52"],
+		// 	["boost53"]
+		// ];
 
 		this.targetPoints = 1000;
 
@@ -88,6 +88,10 @@ gameStates.game = {
 			player = this.addPlayer(players[i]);
 			if(players[i].id === comms.id) this.myCar = player;
 		}
+		var boosts = this.data.boosts;
+		for (var i = 0; i < boosts.length; i++) {
+			this.addBoost(boosts[i]);
+		}
 	},
 
 	onServerUpdate: function (players) {
@@ -107,6 +111,11 @@ gameStates.game = {
 	onNewPlayer: function (player) {
 		if(game.state.current !== "game") return;
 		this.addPlayer(player);
+	},
+
+	onBoostSpawn: function (boost) {
+		if(game.state.current !== "game") return;
+		this.addBoost(boost);
 	},
 
 	createLocalPlayer: function () {
@@ -134,7 +143,7 @@ gameStates.game = {
 	removePlayer: function (player) {
 		if(game.state.current !== "game") return;
 		this.playersContainer.forEach(function (p) {
-			if(p.playerData.id === player.id){
+			if(p.playerData && (p.playerData.id === player.id) ){
 				p.destroy();
 			}
 		})
@@ -152,27 +161,27 @@ gameStates.game = {
 	},
 
 	create: function () {
-		for (var i = 0; i < 3; i++) {
-			this.addBoost(this.createBoost());
-		}
-		this.positionBoosts();
+		// for (var i = 0; i < 3; i++) {
+		// 	this.addBoost(this.createBoost());
+		// }
+		// this.positionBoosts();
 	},
 
 	createBoost: function () {
-		this.boostIdCounter = 1;//COMES FROM SERVER
-		var weightedRand = Math.pow(Math.random(),6);
-
-		var rarity = Math.floor(weightedRand*this.boostsLibrary.length);
-		var rarityCount = this.boostsLibrary[rarity].length;
-		var boostIndex = Math.floor(Math.random()*rarityCount);
-
-		var add = rarity*2 + 1;
-
-		return {
-			name: this.boostsLibrary[rarity][boostIndex],
-			value: add,
-			id: this.boostIdCounter++
-		};
+		// this.boostIdCounter = 1;//COMES FROM SERVER
+		// var weightedRand = Math.pow(Math.random(),6);
+		//
+		// var rarity = Math.floor(weightedRand*this.boostsLibrary.length);
+		// var rarityCount = this.boostsLibrary[rarity].length;
+		// var boostIndex = Math.floor(Math.random()*rarityCount);
+		//
+		// var add = rarity*2 + 1;
+		//
+		// return {
+		// 	name: this.boostsLibrary[rarity][boostIndex],
+		// 	value: add,
+		// 	id: this.boostIdCounter++
+		// };
 	},
 
 	onClick: function () {
@@ -307,37 +316,23 @@ gameStates.game = {
 		if(!this.waitingBoostResponse && !this.pendingBoost){
 			this.waitingBoostResponse = true;//disable purchase of further boosts if there's no reply yet
 			this.boosts.remove(sprite,false,true);//remove boost, someone will get it anyway
-			this.requestBoost(boost,
-				(function () {//success
-					this.waitingBoostResponse = false;
-					this.counterText.text = this.myPoints;
-					this.addBoost(this.createBoost());
-					if(Date.now() - sprite.spawnThen < this.boostMaxCooldown){//cooldown remaining
-						this.onBoostCooldownStart(boost);
+			comms.requestBoost(boost,
+				(function (isSuccess) {
+					if(isSuccess){
+						this.waitingBoostResponse = false;
+						this.counterText.text = this.myPoints;
+						if(Date.now() - sprite.spawnThen < this.boostMaxCooldown){//cooldown remaining
+							this.onBoostCooldownStart(boost);
+						} else {
+							this.showBoosts();
+							this.applyBoost(boost);
+						}
 					} else {
+						this.waitingBoostResponse = false;
 						this.showBoosts();
-						this.applyBoost(boost);
 					}
-			}).bind(this),(function () {//fail
-				this.waitingBoostResponse = false;
-				this.addBoost(this.createBoost());
-				this.showBoosts();
 			}).bind(this));
 		}
-	},
-
-	requestBoost: function (boost,onsuccess,onfail) {
-		//send request to server
-		var latency = Math.random()*0+100;
-		// latency = 0;
-		var fn = function fn() {
-			if(Math.random()>0.1){
-				onsuccess();
-			} else {
-				onfail();
-			}
-		};
-		setTimeout(fn,latency);
 	},
 
 	applyBoost: function (boost) {
