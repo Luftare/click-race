@@ -8,13 +8,6 @@ gameStates.game = {
 		this.crossedFinishline = false;
 		this.lastClientUpdateTime = Date.now();
 
-		// this.boostsLibrary = [
-		// 	["boost00","boost10","boost20","boost30"],
-		// 	["boost21","boost31","boost41"],
-		// 	["boost42","boost52"],
-		// 	["boost53"]
-		// ];
-
 		this.targetPoints = 1000;
 
 		this.clickerY = game.camera.height-50;
@@ -116,6 +109,7 @@ gameStates.game = {
 	onBoostSpawn: function (boost) {
 		if(game.state.current !== "game") return;
 		this.addBoost(boost);
+		this.positionBoosts();
 	},
 
 	createLocalPlayer: function () {
@@ -143,7 +137,7 @@ gameStates.game = {
 	removePlayer: function (player) {
 		if(game.state.current !== "game") return;
 		this.playersContainer.forEach(function (p) {
-			if(p.playerData && (p.playerData.id === player.id) ){
+			if(p.playerData && player && (p.playerData.id === player.id) ){
 				p.destroy();
 			}
 		})
@@ -161,27 +155,7 @@ gameStates.game = {
 	},
 
 	create: function () {
-		// for (var i = 0; i < 3; i++) {
-		// 	this.addBoost(this.createBoost());
-		// }
-		// this.positionBoosts();
-	},
 
-	createBoost: function () {
-		// this.boostIdCounter = 1;//COMES FROM SERVER
-		// var weightedRand = Math.pow(Math.random(),6);
-		//
-		// var rarity = Math.floor(weightedRand*this.boostsLibrary.length);
-		// var rarityCount = this.boostsLibrary[rarity].length;
-		// var boostIndex = Math.floor(Math.random()*rarityCount);
-		//
-		// var add = rarity*2 + 1;
-		//
-		// return {
-		// 	name: this.boostsLibrary[rarity][boostIndex],
-		// 	value: add,
-		// 	id: this.boostIdCounter++
-		// };
 	},
 
 	onClick: function () {
@@ -297,6 +271,7 @@ gameStates.game = {
 
 	addBoost: function (boost) {
 		var b = game.add.sprite(game.camera.width/1,0,boost.name);
+		b.id = boost.id;
 		b.spawnThen = boost.spawnThen = Date.now();
 		b.anchor.setTo(0.5,0.5);
 		b.inputEnabled = true;
@@ -333,6 +308,13 @@ gameStates.game = {
 					}
 			}).bind(this));
 		}
+	},
+
+	removeBoost: function (boost) {
+		if(!boost) return;
+		this.boosts.forEach(function (b) {
+			if(b.id === boost.id) b.destroy();
+		},this);
 	},
 
 	applyBoost: function (boost) {

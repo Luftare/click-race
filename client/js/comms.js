@@ -2,7 +2,7 @@ var comms = {
   id: false,
   connected: false,
   myCar: false,
-  clientUpdateDt: 500,
+  clientUpdateDt: 1000,
   connect: function () {
     var socket = io.connect(window.location.href);
     comms.socket = socket;
@@ -25,6 +25,10 @@ var comms = {
       gameStates.game.onBoostSpawn(boost);
     });
 
+    socket.on("remove_boost",function (boost) {
+      gameStates.game.removeBoost(boost);
+    });
+
     socket.on("player_disconnected",function (player) {
       gameStates.game.removePlayer(player);
     });
@@ -43,7 +47,6 @@ var comms = {
   },
 
   requestBoost: function (boost,cb){
-    console.log(cb)
     comms.socket.emit("request_boost",boost,cb);
   },
 

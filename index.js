@@ -60,13 +60,22 @@ io.sockets.on("connection", function (socket) {
 	});
 
 	socket.on("client_update", function (data) {
-		if(socket.player && socket.player.points){
+		if(socket.player && socket.player){
 				socket.player.points = data.points;
 		}
 	});
 
 	socket.on("request_boost", function (boost,cb) {
-		cb("HELLO!");
+		var isSuccess = false;
+		for (var i = 0; i < boosts.length; i++) {
+			if(boosts[i].id === boost.id){
+				isSuccess = true;
+				boosts.splice(i,1);
+				break;
+			}
+		}
+		cb(isSuccess);
+		if(isSuccess) socket.broadcast.emit("remove_boost",boost);
 	});
 
 	socket.on("disconnect", function () {
@@ -101,7 +110,7 @@ setInterval(function () {//gameloop
 	if(boosts.length < 3){
 		var boost = createBoost();
 		boosts.push(boost);
-		io.sockets.emit("boost_spawn",players);
+		io.sockets.emit("boost_spawn",boost);
 	}
 	io.sockets.emit("game_update",players);
 },serverUpdateDt);
