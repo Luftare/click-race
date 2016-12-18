@@ -9,30 +9,10 @@ Click fast
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <link rel="stylesheet" type="text/css" href="css/style.css">
-<!-- <link rel="stylesheet" type="text/css" href="css/style.css"> -->
-<!--
-Idea:
-- first player to have over million points wins
-- tap a button to get points
-- start: one click, one point
-- buy upgrades to modify point/click
-- 3 upgrades available all the time
-- first player to click an upgrade will get it
-	- new upgrade will spawn immediately
-- upgrades cost points and modify
-	- multiply current income
-	- add absolute
-- new round starts once previous is completed
 
-
--->
 <style>
 #input_name {
 	position: absolute;
-	/*top: 45vh;*/
-	/*-webkit-transform: translate(0,-50);*/
-	/*-ms-transform: translate(0%,-50%);*/
-	/*transform: translate(0%,-50%);*/
 	left: 0;
   right: 0;
   margin-left: auto;
@@ -48,7 +28,7 @@ Idea:
 <body>
 	<input id="input_name" placeholder="Name..." type="text" hidden></input>
 	<div id="game_container"></div>
-	<script src="js/lib/Phaser.min.js"></script>
+	<script src="js/lib/phaser.min.js"></script>
 	<script src="js/lib/socket.io.min.js"></script>
 
 	<script src="js/dom.js"></script>
