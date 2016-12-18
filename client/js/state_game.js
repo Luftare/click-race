@@ -134,7 +134,6 @@ gameStates.game = {
 	removePlayer: function (player) {
 		if(game.state.current !== "game") return;
 		this.playersContainer.forEach(function (p) {
-			console.log(p.playerData.id,p.playerData,p,player,player.id)
 			if(p.playerData.id === player.id){
 				p.destroy();
 			}
