@@ -16,9 +16,9 @@ gameStates.game = {
 
 		this.targetPoints = 1000;
 
-		this.clickerY = game.camera.height-80;
+		this.clickerY = game.camera.height-50;
 		this.clickerHideY = game.camera.height + 150;
-		this.boostY = this.clickerY - 120;
+		this.boostY = this.clickerY - 100;
 		this.boostHideY = game.camera.height + 100;
 		this.counterTextY = 50;
 		this.playersContainerY = 100;
@@ -49,7 +49,7 @@ gameStates.game = {
 
 		this.starEmitter = game.add.emitter(game.camera.width/2, game.camera.height/2, 200);
 		this.starEmitter.makeParticles("star");
-		this.starEmitter.minParticleScale = 0.1;
+		this.starEmitter.minParticleScale = 0.3;
     this.starEmitter.maxParticleScale = 1;
 
 		this.bigTextStyle = { font: "40px Arial", fill: "#fff", stroke: '#000000', strokeThickness: 6};

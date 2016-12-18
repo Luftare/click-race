@@ -70,13 +70,12 @@ gameStates.login = {
 		this.pedal.inputEnabled = false;
 		this.pedal.events.onInputDown.add(function () {
 			this.playerName = this.inputField.value;
-			console.log(this.playerName,this.selectedCar.key);
 			this.data = {
 				name: this.playerName,
 				car: this.selectedCar.key
 			};
 			this.inputField.hidden = true;
-			game.state.start("game",true,false,this.data);
+			this.connect();
 		},this);
 
 		this.header = game.add.text(game.camera.width/2,game.camera.height/2 - 100, "Select a car", { font: "52px Arial Black", fill: "#111" });
@@ -115,6 +114,10 @@ gameStates.login = {
 
 	create: function(){
 
+	},
+
+	connect: function () {
+		game.state.start("game",true,false,this.data);
 	},
 
 	setBouncing: function (u,amount) {
