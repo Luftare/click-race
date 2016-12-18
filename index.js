@@ -13,26 +13,37 @@ app.use('/',express.static(__dirname +'/client'));
 
 http.listen(port, function(){
   console.log('listening port:'+port);
-	startState(GAME);
+	state = GAME;
 });
 
-var players = [];
 var sockets = {};
 
+var players = [];
+var boosts = [];
+
 var state = "game";
-var serverUpdateDt = 1000;
+var serverUpdateDt = 300;
 var SCORES = "scores";
 var GAME = "game";
+var boostIdCounter = 1;
 var stateTimes = {
 	game: 5000,
-	scores: 3000
+	scores: 1000
 };
 var stateTimeout;
+
+var boostsLibrary = [
+	["boost00","boost10","boost20","boost30"],
+	["boost21","boost31","boost41"],
+	["boost42","boost52"],
+	["boost53"]
+];
+
 
 io.sockets.on("connection", function (socket) {
 	sockets[socket.id] = socket;
 
-	socket.on("login", function (data) {
+	socket.on("login", function (data,cb) {
 		socket.player = {
 			id: socket.id,
 			points: 0,
@@ -40,15 +51,49 @@ io.sockets.on("connection", function (socket) {
 			car: data.car,
 			name: data.name
 		};
+		cb();
 		players.push(socket.player);
 		socket.emit("init_game",{
-			players: players
+			players: players,
+			boosts: boosts
 		});
 		socket.broadcast.emit("player_connected",socket.player);
 	});
 
 	socket.on("client_update", function (data) {
-		socket.player.points = data.points;
+		if(socket.player && socket.player){
+				socket.player.points = data.points;
+		}
+	});
+
+	socket.on("request_boost", function (boost,cb) {
+		var isSuccess = false;
+		for (var i = 0; i < boosts.length; i++) {
+			if(boosts[i].id === boost.id){
+				isSuccess = true;
+				boosts.splice(i,1);
+				break;
+			}
+		}
+		cb(isSuccess);
+		if(isSuccess) socket.broadcast.emit("remove_boost",boost);
+	});
+
+	socket.on("request_victory", function () {
+		if(state === GAME){
+			state === SCORES;
+			//game over, you win!
+			io.sockets.emit("to_scores",players);
+			setTimeout(function () {
+				for (var i = 0; i < players.length; i++) {
+					players[i].points = 0;
+				}
+				io.sockets.emit("init_game",{
+					players: players,
+					boosts: boosts
+				});
+			},players.length*2000)
+		}
 	});
 
 	socket.on("disconnect", function () {
@@ -62,22 +107,29 @@ io.sockets.on("connection", function (socket) {
 		}
 	});
 
-
 });
 
-setInterval(function () {
+function createBoost(){
+	var weightedRand = Math.pow(Math.random(),2);
+	var rarity = Math.floor(weightedRand*boostsLibrary.length);
+	var rarityCount = boostsLibrary[rarity].length;
+	var boostIndex = Math.floor(Math.random()*rarityCount);
+
+	var add = rarity*2 + 1;
+
+	return {
+		name: boostsLibrary[rarity][boostIndex],
+		value: add,
+		id: boostIdCounter++
+	};
+}
+
+setInterval(function () {//gameloop
+	if(state !== GAME) return;
+	if(boosts.length < 3){
+		var boost = createBoost();
+		boosts.push(boost);
+		io.sockets.emit("boost_spawn",boost);
+	}
 	io.sockets.emit("game_update",players);
 },serverUpdateDt);
-
-function startState(stateName){
-	state = stateName;
-	console.log("entering state: ",stateName)
-	stateTimeout = setTimeout(function () {
-		if(state === GAME){
-		//	startState(SCORES);
-		}
-		else if(state === SCORES){
-	//		startState(GAME);
-		}
-	},stateTimes[stateName]);
-}

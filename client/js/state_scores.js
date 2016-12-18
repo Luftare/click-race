@@ -28,33 +28,10 @@ gameStates.scores = {
 		this.header.strokeThickness = 16;
 		this.header.setShadow(2, 2, "#333333", 2, true, false);
 
-		var cars = [];
-		
-		cars.push({
-			sprite: "car0",
-			name: "Jeppe",
-			points: 0,
-			id: Date.now()
-		})
 
-		cars.push({
-			sprite: "car1",
-			name: "Jeppe",
-			points: 0,
-			id: Date.now()
-		})
-		cars.push({
-			sprite: "car2",
-			name: "Jeppe",
-			points: 0,
-			id: Date.now()
-		})
-		cars.push({
-			sprite: "car1",
-			name: "Jeppe",
-			points: 0,
-			id: Date.now()
-		})
+		var cars = this.data.sort(function (a,b) {
+			return b.points-a.points;
+		});
 
 		var self = this;
 		for (var i = 0; i < cars.length; i++) {
@@ -70,7 +47,7 @@ gameStates.scores = {
 		var marginY = 50;
 		var name = game.add.text(game.camera.width/2-120,this.listY + index*marginY-200, (index + 1) + ". " + car.name,this.mediumTextStyle);
 		name.anchor.setTo(0,0.5)
-		var sprite = game.add.sprite(game.camera.width/2 + 120, this.listY + index*marginY-200,car.sprite);
+		var sprite = game.add.sprite(game.camera.width/2 + 120, this.listY + index*marginY-200,car.car);
 		sprite.anchor.setTo(1,0.5);
 		game.add.tween(sprite).to( { y:this.listY + index*marginY }, 1000, Phaser.Easing.Bounce.Out, true);
 		game.add.tween(name).to( { y:this.listY + index*marginY }, 1000, Phaser.Easing.Bounce.Out, true)
