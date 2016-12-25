@@ -17,7 +17,7 @@ gameStates.game = {
 		this.pedalDown = false;
 		this.maxPointsPerSecond = 0.01;
 
-		this.targetPoints = 1000;
+		this.targetPoints = 2000;
 
 		this.clickerY = game.camera.height-50;
 		this.clickerHideY = game.camera.height + 150;
@@ -42,12 +42,12 @@ gameStates.game = {
 		this.smokeEmitter = game.add.emitter(100, 150, 200);
 		this.smokeEmitter.makeParticles(["smoke"]);
 		this.smokeEmitter.start(false, 2000, 100);
-		this.smokeEmitter.setYSpeed(-10, -20);
-		this.smokeEmitter.setXSpeed(-10,10);
+		this.smokeEmitter.setYSpeed(-5, -10);
+		this.smokeEmitter.setXSpeed(-30,0);
 		this.smokeEmitter.gravity = 0;
 		this.smokeEmitter.minParticleScale = 0.3;
 		this.smokeEmitter.maxParticleScale = 0.7;
-		this.smokeEmitter.on = true;
+		this.smokeEmitter.on = false;
 
 		this.playersContainer = game.add.group();
 		this.playersContainer.y = this.playersContainerY;
@@ -266,6 +266,8 @@ gameStates.game = {
 			this.rpm = this.maxRpm-5;
 		}
 
+		this.smokeEmitter.on = this.rpm > this.optimalRpm;
+
 		this.meter_pointer.rotation = Math.PI*(5/6)+(this.rpm/this.maxRpm)*(8/6)*Math.PI;
 
 
@@ -278,6 +280,11 @@ gameStates.game = {
 		}
 
 		this.lastPointUpdate = now;
+
+		this.smokeEmitter.x = this.myCar.worldPosition.x-this.myCar.width;
+		this.smokeEmitter.y = this.myCar.worldPosition.y+this.myCar.height/2;
+
+		// console.log(this.myCar.worldPosition.x,)
 
 
 		if(now - this.lastClientUpdateTime >= comms.clientUpdateDt){
