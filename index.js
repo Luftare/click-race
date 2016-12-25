@@ -92,7 +92,7 @@ io.sockets.on("connection", function (socket) {
 					players: players,
 					boosts: boosts
 				});
-			},players.length*2000)
+			},players.length*2000+3000)
 		}
 	});
 
