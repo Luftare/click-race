@@ -41,11 +41,32 @@ rarity 0 1 2 3 4 5
 		game.load.image("particle3","images/particle3.png");
 
 		game.load.image("star","images/star.png");
+		game.load.image("smoke","images/smoke.png");
+
+		game.load.image("meter","images/meter.png");
+		game.load.image("meter_pointer","images/meter_pointer.png");
 	},
 
 	create: function () {
-			game.state.start("login");
-			// game.state.start("scores",true,false,this.data);
+			if(devmode){
+				game.state.start("game",true,false,{
+					players: [{
+						id: 2,
+						car: "car0",
+						points: 0
+					}],
+					boosts: [
+						{
+							name: "boost00",
+							value: 1,
+							id: 6
+						}
+					]
+				});
+			} else {
+				game.state.start("login");
+			}
+
 	}
 
 };

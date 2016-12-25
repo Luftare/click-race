@@ -7,6 +7,15 @@ gameStates.game = {
 		this.gameStartTime = Date.now();
 		this.crossedFinishline = false;
 		this.lastClientUpdateTime = Date.now();
+		this.lastPointUpdate = Date.now();
+		this.rpm = 0;
+		this.maxRpm = 80;
+		this.optimalRpm = 60;
+
+		this.rpmAcceleration = 1;
+		this.rpmDeceleration = -0.5;
+		this.pedalDown = false;
+		this.maxPointsPerSecond = 0.01;
 
 		this.targetPoints = 1000;
 
@@ -29,6 +38,16 @@ gameStates.game = {
 		this.waitingBoostResponse = false;
 
 		this.finishlineSprite = game.add.sprite(game.camera.width/2+this.playerTrackWidth/2, this.playersContainerY,"finishline");
+
+		this.smokeEmitter = game.add.emitter(100, 150, 200);
+		this.smokeEmitter.makeParticles(["smoke"]);
+		this.smokeEmitter.start(false, 2000, 100);
+		this.smokeEmitter.setYSpeed(-10, -20);
+		this.smokeEmitter.setXSpeed(-10,10);
+		this.smokeEmitter.gravity = 0;
+		this.smokeEmitter.minParticleScale = 0.3;
+		this.smokeEmitter.maxParticleScale = 0.7;
+		this.smokeEmitter.on = true;
 
 		this.playersContainer = game.add.group();
 		this.playersContainer.y = this.playersContainerY;
@@ -64,12 +83,23 @@ gameStates.game = {
 		this.clicker.anchor.setTo(0.5,0.5);
 		this.clicker.inputEnabled = true;
 		this.clicker.events.onInputDown.add(function () {
-			this.onClick();
+			this.pedalDown = true;
+			// this.onClick();
+		},this);
+
+		this.clicker.events.onInputUp.add(function () {
+			this.pedalDown = false;
+			// this.onClick();
 		},this);
 
 		this.incomeText = game.add.text(0,-0, this.myIncome, this.mediumTextStyle);
 		this.incomeText.anchor.setTo(0.5,0.5);
 		this.clicker.addChild(this.incomeText)
+
+		this.meter = game.add.sprite(game.camera.width/2, game.camera.height/2,"meter");
+		this.meter.anchor.setTo(0.5,0.5);
+		this.meter_pointer = game.add.sprite(game.camera.width/2, game.camera.height/2,"meter_pointer");
+		this.meter_pointer.anchor.setTo(0,0.5);
 
 		this.onServerInitGame();
 	},
@@ -110,16 +140,6 @@ gameStates.game = {
 		if(game.state.current !== "game") return;
 		this.addBoost(boost);
 		this.positionBoosts();
-	},
-
-	createLocalPlayer: function () {
-		var car = {
-			car: this.data.car,
-			name: this.data.name,
-			points: 0,
-			id: Date.now()
-		};
-		this.myCar = this.addPlayer(car);
 	},
 
 	addPlayer: function (data) {
@@ -191,11 +211,15 @@ gameStates.game = {
 	hideClicker: function () {
 		if(this._tweenClickerDisplay && this._tweenClickerDisplay.stop) this._tweenClickerDisplay.stop();
 		this._tweenClickerDisplay = game.add.tween(this.clicker).to({y: this.clickerHideY},this.hideAnimationTime,Phaser.Easing.Quadratic.InOut,true);
+		this.meter.visible = false;
+		this.meter_pointer.visible = false;
 	},
 
 	showClicker: function () {
 		if(this._tweenClickerDisplay && this._tweenClickerDisplay.stop) this._tweenClickerDisplay.stop();
 		game.add.tween(this.clicker).to({y:this.clickerY},this.hideAnimationTime,Phaser.Easing.Quadratic.InOut,true);
+		this.meter.visible = true;
+		this.meter_pointer.visible = true;
 	},
 
 	onBoostCooldownStart: function (boost) {
@@ -218,15 +242,51 @@ gameStates.game = {
 		this.applyBoost(boost);
 	},
 
+	getTickPoints: function (now) {
+		var curve = 2;
+		if(this.rpm > this.optimalRpm){
+			return this.myIncome*(now-this.lastPointUpdate)*( Math.pow(1-(this.rpm-this.optimalRpm)/(this.maxRpm-this.optimalRpm),curve) )*this.maxPointsPerSecond;
+		} else {
+			return this.myIncome*(now-this.lastPointUpdate)*Math.pow(this.rpm/this.maxRpm,curve)*this.maxPointsPerSecond;
+		}
+
+	},
+
 	update: function () {
 		var now = Date.now();
+
+		if(this.pedalDown){
+			this.rpm += this.rpmAcceleration;
+		} else {
+			this.rpm += this.rpmDeceleration;
+		}
+
+		if(this.rpm <= 0) this.rpm = 0;
+		if(this.rpm > this.maxRpm){
+			this.rpm = this.maxRpm-5;
+		}
+
+		this.meter_pointer.rotation = Math.PI*(5/6)+(this.rpm/this.maxRpm)*(8/6)*Math.PI;
+
+
+		if(!this.crossedFinishline && this.myCar){
+			this.myCar.playerData.points += this.getTickPoints(now);
+			this.counterText.text = this.myCar.playerData.points;
+			if(this.myCar.playerData.points >= this.targetPoints){
+				this.onCrossFinishline();
+			}
+		}
+
+		this.lastPointUpdate = now;
+
+
 		if(now - this.lastClientUpdateTime >= comms.clientUpdateDt){
 			this.lastClientUpdateTime = now;
-			comms.emitClientUpdate(this.myCar.playerData);
+			if(!devmode) comms.emitClientUpdate(this.myCar.playerData);
 		}
 
 		if(this.pendingBoost){
-			if(Date.now() - this.pendingBoost.spawnThen > this.boostMaxCooldown){
+			if(now - this.pendingBoost.spawnThen > this.boostMaxCooldown){
 				this.onBoostCooldownFinish(this.pendingBoost);
 			}
 		}
