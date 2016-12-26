@@ -75,8 +75,6 @@ gameStates.game = {
 		this.playersContainer.y = 120;
 		this.playersContainer.x = game.camera.width/2;
 
-		this.trees_front = game.add.group();
-
 		this.smokeEmitter = game.add.emitter(100, 150, 200);
 		this.smokeEmitter.makeParticles(["smoke"]);
 		this.smokeEmitter.start(false, 2000, 100);
@@ -86,6 +84,8 @@ gameStates.game = {
 		this.smokeEmitter.minParticleScale = 0.3;
 		this.smokeEmitter.maxParticleScale = 0.7;
 		this.smokeEmitter.on = false;
+
+		this.trees_front = game.add.group();
 
 		// this.hills_back.create(0,0,"hills_back");
 		this.hills_back_width = game.cache.getImage("hills_back").width;
@@ -395,7 +395,7 @@ gameStates.game = {
 
 		if(!devmode){
 			this.smokeEmitter.x = this.myCar.worldPosition.x-this.myCar.width;
-			this.smokeEmitter.y = this.myCar.worldPosition.y+this.myCar.height/2;
+			this.smokeEmitter.y = this.myCar.worldPosition.y;
 		}
 
 
