@@ -4,6 +4,7 @@ gameStates.game = {
 	},
 
 	preload: function(){
+
 		this.gameStartTime = Date.now();
 		this.crossedFinishline = false;
 		this.lastClientUpdateTime = Date.now();
@@ -37,6 +38,28 @@ gameStates.game = {
 		this.boosts.y = this.boostY;
 		this.waitingBoostResponse = false;
 
+		this.groundColor = 0x4cd27c;
+		this.skyColor = 0xccffff;
+
+		this.skyBox = game.add.graphics(0, 0);
+		this.skyBox.beginFill(this.skyColor);
+		this.skyBox.drawRect(0, 0, game.camera.width, 100);
+
+		this.groundBox = game.add.graphics(0, 0);
+		this.groundBox.beginFill(this.groundColor);
+		this.groundBox.drawRect(0, 100, game.camera.width, 120);
+
+		this.hills_back = game.add.group();
+		this.hills_mid = game.add.group();
+		this.trees_back = game.add.group();
+		this.road = game.add.group();
+
+		this.playersContainer = game.add.group();
+		this.playersContainer.y = this.playersContainerY;
+		this.playersContainer.x = game.camera.width/2;
+
+		this.trees_front = game.add.group();
+
 		this.finishlineSprite = game.add.sprite(game.camera.width/2+this.playerTrackWidth/2, this.playersContainerY,"finishline");
 
 		this.smokeEmitter = game.add.emitter(100, 150, 200);
@@ -49,9 +72,35 @@ gameStates.game = {
 		this.smokeEmitter.maxParticleScale = 0.7;
 		this.smokeEmitter.on = false;
 
-		this.playersContainer = game.add.group();
-		this.playersContainer.y = this.playersContainerY;
-		this.playersContainer.x = game.camera.width/2;
+		// this.hills_back.create(0,0,"hills_back");
+		this.hills_back_width = game.cache.getImage("hills_back").width;
+		var hills_back_count = 1 + game.camera.width / this.hills_back_width;
+		var hill;
+		for (var i = 0; i < hills_back_count; i++) {
+			hill = this.hills_back.create(i*this.hills_back_width,0,"hills_back");
+			hill.anchor.setTo(0,1);
+		}
+
+		this.hills_mid_width = game.cache.getImage("hills_mid").width;
+		var hills_mid_count = 1 + game.camera.width / this.hills_mid_width;
+		for (var i = 0; i < hills_mid_count; i++) {
+			hill = this.hills_mid.create(i*this.hills_mid_width,0,"hills_mid");
+			hill.anchor.setTo(0,1);
+		}
+
+		this.road_width = game.cache.getImage("road").width;
+		var road_count = 1 + game.camera.width / this.road_width;
+		for (var i = 0; i < road_count; i++) {
+			hill = this.road.create(i*this.road_width,0,"road");
+			hill.anchor.setTo(0,0);
+		}
+
+
+
+		this.hills_back.y = 100;
+		this.hills_mid.y = 100;
+		this.road.y = 120;
+
 
 		this.particleEmitter = game.add.emitter(game.camera.width/2, game.camera.height/2, 20);
 		this.particleEmitter.makeParticles(['particle0', 'particle1', 'particle2',"particle3"]);
@@ -254,7 +303,7 @@ gameStates.game = {
 
 	update: function () {
 		var now = Date.now();
-
+		var points;
 		if(this.pedalDown){
 			this.rpm += this.rpmAcceleration;
 		} else {
@@ -266,13 +315,21 @@ gameStates.game = {
 			this.rpm = this.maxRpm-5;
 		}
 
-		this.smokeEmitter.on = this.rpm > this.optimalRpm;
+		points = this.getTickPoints(now);
 
+		this.smokeEmitter.on = this.rpm > this.optimalRpm;
 		this.meter_pointer.rotation = Math.PI*(5/6)+(this.rpm/this.maxRpm)*(8/6)*Math.PI;
 
+		this.road.x -= points*10;
+		this.hills_mid.x -= points*2;
+		this.hills_back.x -= points*1;
+
+		if(-this.road.x > this.road_width) this.road.x = 0;
+		if(-this.hills_mid.x > this.hills_mid_width) this.hills_mid.x = 0;
+		if(-this.hills_back.x > this.hills_back_width) this.hills_back.x = 0;
 
 		if(!this.crossedFinishline && this.myCar){
-			this.myCar.playerData.points += this.getTickPoints(now);
+			this.myCar.playerData.points += points;
 			this.counterText.text = this.myCar.playerData.points;
 			if(this.myCar.playerData.points >= this.targetPoints){
 				this.onCrossFinishline();
@@ -281,8 +338,11 @@ gameStates.game = {
 
 		this.lastPointUpdate = now;
 
-		this.smokeEmitter.x = this.myCar.worldPosition.x-this.myCar.width;
-		this.smokeEmitter.y = this.myCar.worldPosition.y+this.myCar.height/2;
+		if(!devmode){
+			this.smokeEmitter.x = this.myCar.worldPosition.x-this.myCar.width;
+			this.smokeEmitter.y = this.myCar.worldPosition.y+this.myCar.height/2;
+		}
+
 
 		// console.log(this.myCar.worldPosition.x,)
 
