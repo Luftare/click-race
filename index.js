@@ -57,7 +57,8 @@ io.sockets.on("connection", function (socket) {
 		players.push(socket.player);
 		socket.emit("init_game",{
 			players: players,
-			boosts: boosts
+			boosts: boosts,
+      serverDt: serverUpdateDt
 		});
 		socket.broadcast.emit("player_connected",socket.player);
 	});
@@ -92,7 +93,8 @@ io.sockets.on("connection", function (socket) {
 				}
 				io.sockets.emit("init_game",{
 					players: players,
-					boosts: boosts
+					boosts: boosts,
+          serverDt: serverUpdateDt
 				});
 			},players.length*2000+3000)
 		}
