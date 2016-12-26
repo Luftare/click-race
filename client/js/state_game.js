@@ -163,10 +163,12 @@ gameStates.game = {
 		this.clicker.inputEnabled = true;
 		this.clicker.events.onInputDown.add(function () {
 			if(!this.motorCooling) this.pedalDown = true;
+			this.clicker.scale.setTo(0.9);
 		},this);
 
 		this.clicker.events.onInputUp.add(function () {
 			this.pedalDown = false;
+			this.clicker.scale.setTo(1);
 		},this);
 
 		this.incomeText = game.add.text(0,-0, this.myIncome, this.mediumTextStyle);
@@ -185,6 +187,7 @@ gameStates.game = {
 	onServerInitGame: function () {
 		var players = this.data.players;
 		var player;
+		this.serverDt = this.data.serverDt;
 		for (var i = 0; i < players.length; i++) {
 			player = this.addPlayer(players[i]);
 			if(players[i].id === comms.id) this.myCar = player;
@@ -203,11 +206,11 @@ gameStates.game = {
 			if(players[i].id !== comms.id){
 				car = this.getPlayer(players[i].id);
 				if(car){
+					car.playerData.pointsThen = car.playerData.points || 0;
 					car.playerData.points = players[i].points;
 				}
 			}
 		}
-
 	},
 
 	onNewPlayer: function (player) {
@@ -393,12 +396,8 @@ gameStates.game = {
 
 		this.progressBar.x = (this.myCar.playerData.points/this.targetPoints)*game.camera.width - game.camera.width;
 
-		if(!devmode){
-			this.smokeEmitter.x = this.myCar.worldPosition.x-this.myCar.width;
-			this.smokeEmitter.y = this.myCar.worldPosition.y;
-		}
-
-
+		this.smokeEmitter.x = this.myCar.worldPosition.x-this.myCar.width;
+		this.smokeEmitter.y = this.myCar.worldPosition.y;
 
 		if(now - this.lastClientUpdateTime >= comms.clientUpdateDt){
 			this.lastClientUpdateTime = now;
@@ -416,10 +415,25 @@ gameStates.game = {
 		var roadHeight = 60;
 		var containerHeight = roadHeight - roadMargin*2;
 		var playerMargin = containerHeight/this.playersCount;
+		var syncer = 1;
 
 		this.playersContainer.forEach(function (p) {
 			index++;
-			p.x = ((p.playerData.points - this.myCar.playerData.points)/this.targetPoints)*this.trackWidth;
+			if(p.playerData.id === comms.id){
+					p.x = ((p.playerData.points - this.myCar.playerData.points)/this.targetPoints)*this.trackWidth;
+			} else {
+				if(!p.playerData.interpolatedPoints) p.playerData.interpolatedPoints = p.playerData.pointsThen;
+
+				syncer = (p.playerData.points-p.playerData.interpolatedPoints)*0.02;
+				//p.playerData.points-p.playerData.pointsThen
+
+				p.playerData.interpolatedPoints = p.playerData.interpolatedPoints + (p.playerData.points-p.playerData.pointsThen)*(1000*game.time.physicsElapsed/this.serverDt);
+				p.playerData.interpolatedPoints += syncer;
+
+				p.x = ((p.playerData.interpolatedPoints - this.myCar.playerData.points)/this.targetPoints)*this.trackWidth;
+
+			}
+
 			p.y = roadMargin + index*playerMargin;
 		},this);
 	},
