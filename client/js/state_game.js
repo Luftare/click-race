@@ -9,6 +9,7 @@ gameStates.game = {
 		this.crossedFinishline = false;
 		this.lastClientUpdateTime = Date.now();
 		this.lastPointUpdate = Date.now();
+		this.motorCooling = false;
 		this.rpm = 0;
 		this.maxRpm = 80;
 		this.optimalRpm = 60;
@@ -18,7 +19,10 @@ gameStates.game = {
 		this.pedalDown = false;
 		this.maxPointsPerSecond = 0.01;
 
+		this.meterShakeAmount = 0;
+
 		this.targetPoints = 2000;
+		this.trackWidth = 5000;
 
 		this.clickerY = game.camera.height-50;
 		this.clickerHideY = game.camera.height + 150;
@@ -49,18 +53,27 @@ gameStates.game = {
 		this.groundBox.beginFill(this.groundColor);
 		this.groundBox.drawRect(0, 100, game.camera.width, 120);
 
+		this.progressBar = game.add.graphics(0, 220);
+		this.progressBar.beginFill(0xdddd00);
+		this.progressBar.drawRect(0, 0, game.camera.width, 20);
+
 		this.hills_back = game.add.group();
 		this.hills_mid = game.add.group();
 		this.trees_back = game.add.group();
 		this.road = game.add.group();
 
+		this.finishlineSprite = game.add.sprite(100, 120,"finishline");
+		this.finishlineSprite.anchor.setTo(1,0);
+
+		this.startLine = game.add.graphics(100, 120);
+		this.startLine.beginFill(0xdddd00);
+		this.startLine.drawRect(0, 0, 10, 60);
+
 		this.playersContainer = game.add.group();
-		this.playersContainer.y = this.playersContainerY;
+		this.playersContainer.y = 120;
 		this.playersContainer.x = game.camera.width/2;
 
 		this.trees_front = game.add.group();
-
-		this.finishlineSprite = game.add.sprite(game.camera.width/2+this.playerTrackWidth/2, this.playersContainerY,"finishline");
 
 		this.smokeEmitter = game.add.emitter(100, 150, 200);
 		this.smokeEmitter.makeParticles(["smoke"]);
@@ -93,6 +106,21 @@ gameStates.game = {
 		for (var i = 0; i < road_count; i++) {
 			hill = this.road.create(i*this.road_width,0,"road");
 			hill.anchor.setTo(0,0);
+		}
+
+		var trees_count = Math.floor(game.camera.width/120);
+		for (var i = 0; i < trees_count; i++) {
+			hill = this.trees_front.create( (i/trees_count)*game.camera.width + Math.random()*100,200+Math.random()*20,"tree"+Math.round(Math.random()));
+			hill.anchor.setTo(0.5,1);
+		}
+
+		var trees_count = Math.floor(game.camera.width/40);
+		var treeDist;
+		for (var i = 0; i < trees_count; i++) {
+			treeDist = Math.random();
+			hill = this.trees_back.create( (i/trees_count)*game.camera.width + Math.random()*20,105+(1-treeDist)*10,"tree"+Math.round(Math.random()));
+			hill.anchor.setTo(0.5,1);
+			hill.scale.setTo( (1-treeDist)*0.4 + 0.3);
 		}
 
 
@@ -132,13 +160,11 @@ gameStates.game = {
 		this.clicker.anchor.setTo(0.5,0.5);
 		this.clicker.inputEnabled = true;
 		this.clicker.events.onInputDown.add(function () {
-			this.pedalDown = true;
-			// this.onClick();
+			if(!this.motorCooling) this.pedalDown = true;
 		},this);
 
 		this.clicker.events.onInputUp.add(function () {
 			this.pedalDown = false;
-			// this.onClick();
 		},this);
 
 		this.incomeText = game.add.text(0,-0, this.myIncome, this.mediumTextStyle);
@@ -147,8 +173,9 @@ gameStates.game = {
 
 		this.meter = game.add.sprite(game.camera.width/2, game.camera.height/2,"meter");
 		this.meter.anchor.setTo(0.5,0.5);
-		this.meter_pointer = game.add.sprite(game.camera.width/2, game.camera.height/2,"meter_pointer");
+		this.meter_pointer = game.add.sprite(0, 0,"meter_pointer");
 		this.meter_pointer.anchor.setTo(0,0.5);
+		this.meter.addChild(this.meter_pointer);
 
 		this.onServerInitGame();
 	},
@@ -260,14 +287,16 @@ gameStates.game = {
 	hideClicker: function () {
 		if(this._tweenClickerDisplay && this._tweenClickerDisplay.stop) this._tweenClickerDisplay.stop();
 		this._tweenClickerDisplay = game.add.tween(this.clicker).to({y: this.clickerHideY},this.hideAnimationTime,Phaser.Easing.Quadratic.InOut,true);
-		this.meter.visible = false;
+		game.add.tween(this.meter.scale).to({x:0,y:0},200,Phaser.Easing.Quadratic.InOut,true);
+		// this.meter.visible = false;
 		this.meter_pointer.visible = false;
 	},
 
 	showClicker: function () {
 		if(this._tweenClickerDisplay && this._tweenClickerDisplay.stop) this._tweenClickerDisplay.stop();
 		game.add.tween(this.clicker).to({y:this.clickerY},this.hideAnimationTime,Phaser.Easing.Quadratic.InOut,true);
-		this.meter.visible = true;
+		game.add.tween(this.meter.scale).to({x:1,y:1},200,Phaser.Easing.Quadratic.InOut,true);
+		// this.meter.visible = true;
 		this.meter_pointer.visible = true;
 	},
 
@@ -292,18 +321,26 @@ gameStates.game = {
 	},
 
 	getTickPoints: function (now) {
-		var curve = 2;
+		return this.myIncome*(now-this.lastPointUpdate)*(this.rpm/this.maxRpm)*this.maxPointsPerSecond;
+		/*
+		var curve = 1;
 		if(this.rpm > this.optimalRpm){
 			return this.myIncome*(now-this.lastPointUpdate)*( Math.pow(1-(this.rpm-this.optimalRpm)/(this.maxRpm-this.optimalRpm),curve) )*this.maxPointsPerSecond;
 		} else {
 			return this.myIncome*(now-this.lastPointUpdate)*Math.pow(this.rpm/this.maxRpm,curve)*this.maxPointsPerSecond;
 		}
+		*/
 
 	},
 
 	update: function () {
+
 		var now = Date.now();
 		var points;
+
+		this.meter.x = game.camera.width/2 + Math.sin(now/10)*this.meterShakeAmount;
+		this.meterShakeAmount = Math.max(0,this.meterShakeAmount-0.1);
+
 		if(this.pedalDown){
 			this.rpm += this.rpmAcceleration;
 		} else {
@@ -311,8 +348,17 @@ gameStates.game = {
 		}
 
 		if(this.rpm <= 0) this.rpm = 0;
-		if(this.rpm > this.maxRpm){
-			this.rpm = this.maxRpm-5;
+		if(this.rpm >= this.maxRpm && !this.motorCooling){
+			this.rpm = this.maxRpm;
+			this.meterShakeAmount = 15;
+			this.motorCooling = true;
+			this.pedalDown = false;
+			this.particleEmitter.on = true;
+		}
+		if(this.motorCooling && this.rpm <= 0){
+			this.motorCooling = false;
+			this.meterShakeAmount = 0;
+			this.particleEmitter.on = false;
 		}
 
 		points = this.getTickPoints(now);
@@ -320,13 +366,26 @@ gameStates.game = {
 		this.smokeEmitter.on = this.rpm > this.optimalRpm;
 		this.meter_pointer.rotation = Math.PI*(5/6)+(this.rpm/this.maxRpm)*(8/6)*Math.PI;
 
-		this.road.x -= points*10;
-		this.hills_mid.x -= points*2;
-		this.hills_back.x -= points*1;
+		this.road.x -= (points/this.targetPoints)*this.trackWidth;
+		this.hills_mid.x -= (points/this.targetPoints)*this.trackWidth*0.2;
+		this.hills_back.x -= (points/this.targetPoints)*this.trackWidth*0.1;
+
+		this.finishlineSprite.x = this.myCar.worldPosition.x + this.trackWidth - (this.myCar.playerData.points/this.targetPoints)*this.trackWidth;
+		this.startLine.x = this.myCar.worldPosition.x - (this.myCar.playerData.points/this.targetPoints)*this.trackWidth;
 
 		if(-this.road.x > this.road_width) this.road.x = 0;
 		if(-this.hills_mid.x > this.hills_mid_width) this.hills_mid.x = 0;
 		if(-this.hills_back.x > this.hills_back_width) this.hills_back.x = 0;
+
+		this.trees_back.forEach(function (t) {
+			t.x -= (points/this.targetPoints)*this.trackWidth*0.8;
+			if(t.x + 25 <= 0) t.x = game.camera.width + 25;
+		},this);
+
+		this.trees_front.forEach(function (t) {
+			t.x -= (points/this.targetPoints)*this.trackWidth*1.4;
+			if(t.x + 30 <= 0) t.x = game.camera.width + 30;
+		},this);
 
 		if(!this.crossedFinishline && this.myCar){
 			this.myCar.playerData.points += points;
@@ -344,8 +403,6 @@ gameStates.game = {
 		}
 
 
-		// console.log(this.myCar.worldPosition.x,)
-
 
 		if(now - this.lastClientUpdateTime >= comms.clientUpdateDt){
 			this.lastClientUpdateTime = now;
@@ -359,11 +416,9 @@ gameStates.game = {
 		}
 		var index = 0;
 		this.playersContainer.forEach(function (p) {
-			p.y = index*50;
+			p.y = index*5;
 			index++;
-			if(!p.crossedFinishline){
-				p.x = this.playerTrackWidth*( (p.playerData.points/this.targetPoints) - 0.5);
-			}
+			p.x = ((p.playerData.points - this.myCar.playerData.points)/this.targetPoints)*this.trackWidth;
 		},this);
 	},
 

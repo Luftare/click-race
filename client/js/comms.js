@@ -3,7 +3,7 @@ var comms = {
   connected: false,
   myCar: false,
   loggedIn: false,
-  clientUpdateDt: 200,
+  clientUpdateDt: 50,
   connect: function () {
     var socket = io.connect(window.location.href);
     comms.socket = socket;
