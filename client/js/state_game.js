@@ -14,6 +14,8 @@ gameStates.game = {
 		this.maxRpm = 80;
 		this.optimalRpm = 60;
 
+		this.playersCount = 0;
+
 		this.rpmAcceleration = 1;
 		this.rpmDeceleration = -0.5;
 		this.pedalDown = false;
@@ -53,9 +55,9 @@ gameStates.game = {
 		this.groundBox.beginFill(this.groundColor);
 		this.groundBox.drawRect(0, 100, game.camera.width, 120);
 
-		this.progressBar = game.add.graphics(0, 220);
+		this.progressBar = game.add.graphics(-game.camera.width, 220);
 		this.progressBar.beginFill(0xdddd00);
-		this.progressBar.drawRect(0, 0, game.camera.width, 20);
+		this.progressBar.drawRect(-game.camera.width, 0, 2*game.camera.width, 20);
 
 		this.hills_back = game.add.group();
 		this.hills_mid = game.add.group();
@@ -195,6 +197,7 @@ gameStates.game = {
 
 	onServerUpdate: function (players) {
 		if(game.state.current !== "game") return;
+		this.playersCount = players.length;
 		var car;
 		for (var i = 0; i < players.length; i++) {
 			if(players[i].id !== comms.id){
@@ -220,11 +223,11 @@ gameStates.game = {
 
 	addPlayer: function (data) {
 		var car = this.playersContainer.create(0,0,data.car);
-		car.anchor.setTo(1,0.5);
+		car.anchor.setTo(1,1);
 		car.x = this.playerTrackWidth*(0-0.5);
 		car.playerData = data;
 		var tag = game.add.text(15,0,data.name,this.mediumTextStyle);
-		tag.anchor.setTo(0,0.5);
+		tag.anchor.setTo(0,0.8);
 		car.addChild(tag)
 		if(data.id === comms.id) this.myCar = car;
 		return car;
@@ -322,15 +325,6 @@ gameStates.game = {
 
 	getTickPoints: function (now) {
 		return this.myIncome*(now-this.lastPointUpdate)*(this.rpm/this.maxRpm)*this.maxPointsPerSecond;
-		/*
-		var curve = 1;
-		if(this.rpm > this.optimalRpm){
-			return this.myIncome*(now-this.lastPointUpdate)*( Math.pow(1-(this.rpm-this.optimalRpm)/(this.maxRpm-this.optimalRpm),curve) )*this.maxPointsPerSecond;
-		} else {
-			return this.myIncome*(now-this.lastPointUpdate)*Math.pow(this.rpm/this.maxRpm,curve)*this.maxPointsPerSecond;
-		}
-		*/
-
 	},
 
 	update: function () {
@@ -397,6 +391,8 @@ gameStates.game = {
 
 		this.lastPointUpdate = now;
 
+		this.progressBar.x = (this.myCar.playerData.points/this.targetPoints)*game.camera.width - game.camera.width;
+
 		if(!devmode){
 			this.smokeEmitter.x = this.myCar.worldPosition.x-this.myCar.width;
 			this.smokeEmitter.y = this.myCar.worldPosition.y+this.myCar.height/2;
@@ -414,11 +410,17 @@ gameStates.game = {
 				this.onBoostCooldownFinish(this.pendingBoost);
 			}
 		}
+
 		var index = 0;
+		var roadMargin = 15;
+		var roadHeight = 60;
+		var containerHeight = roadHeight - roadMargin*2;
+		var playerMargin = containerHeight/this.playersCount;
+
 		this.playersContainer.forEach(function (p) {
-			p.y = index*5;
 			index++;
 			p.x = ((p.playerData.points - this.myCar.playerData.points)/this.targetPoints)*this.trackWidth;
+			p.y = roadMargin + index*playerMargin;
 		},this);
 	},
 
