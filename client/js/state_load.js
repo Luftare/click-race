@@ -45,6 +45,15 @@ rarity 0 1 2 3 4 5
 
 		game.load.image("meter","images/meter.png");
 		game.load.image("meter_pointer","images/meter_pointer.png");
+
+		game.load.image("hills_mid","images/hills_mid.png");
+		game.load.image("hills_back","images/hills_back.png");
+		game.load.image("tree0","images/tree0.png");
+		game.load.image("tree1","images/tree1.png");
+		game.load.image("road","images/road.png");
+
+		game.load.image("grass0","images/grass0.png");
+		game.load.image("grass1","images/grass1.png");
 	},
 
 	create: function () {

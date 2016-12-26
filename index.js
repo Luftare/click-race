@@ -22,7 +22,7 @@ var players = [];
 var boosts = [];
 
 var state = "game";
-var serverUpdateDt = 300;
+var serverUpdateDt = 100;
 var SCORES = "scores";
 var GAME = "game";
 var boostIdCounter = 1;
@@ -31,6 +31,7 @@ var stateTimes = {
 	scores: 1000
 };
 var stateTimeout;
+var connectionsCount = 0;
 
 var boostsLibrary = [
 	["boost00","boost10","boost20","boost30"],
@@ -41,6 +42,7 @@ var boostsLibrary = [
 
 
 io.sockets.on("connection", function (socket) {
+  connectionsCount++;
 	sockets[socket.id] = socket;
 
 	socket.on("login", function (data,cb) {
@@ -97,6 +99,7 @@ io.sockets.on("connection", function (socket) {
 	});
 
 	socket.on("disconnect", function () {
+    connectionsCount--;
 		io.sockets.emit("player_disconnected",socket.player);
 		delete sockets[socket.id];
 		for (var i = 0; i < players.length; i++) {
@@ -105,6 +108,10 @@ io.sockets.on("connection", function (socket) {
 				return;
 			}
 		}
+    if(connectionsCount === 0){
+      players = [];
+      sockets = {};
+    }
 	});
 
 });
