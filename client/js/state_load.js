@@ -13,6 +13,12 @@ rarity 0 1 2 3 4 5
 		3	           x
 */
 	preload: function(){
+		this.header = game.add.text(game.camera.width/2,game.camera.height/2, "Loading...", { font: "52px Arial", fill: "#111" });
+		this.header.anchor.setTo(0.5);
+		this.header.stroke = "#baf";
+		this.header.strokeThickness = 16;
+		this.header.setShadow(2, 2, "#333333", 2, true, false);
+
 		game.load.image("finishline","images/finishline.png");
 
 		//greys

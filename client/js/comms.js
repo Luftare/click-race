@@ -39,6 +39,7 @@ var comms = {
     });
 
     socket.on("to_scores",function (players) {
+      if(!comms.loggedIn) return;
       game.state.start("scores",true,false,players);
     });
 
