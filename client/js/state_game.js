@@ -481,6 +481,7 @@ gameStates.game = {
 		var txt = "+" + boost.value;
 		b.pricetag = game.add.text(0, 50, txt, this.mediumTextStyle);
 		b.pricetag.anchor.setTo(0.5,0.5);
+		b.pricetag.inputEnabled = false;
 		b.addChild(b.pricetag);
 		this.boosts.add(b);
 		this.positionBoosts();

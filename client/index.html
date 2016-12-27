@@ -11,6 +11,9 @@ Click fast
 <link rel="stylesheet" type="text/css" href="css/style.css">
 
 <style>
+body {
+	background-color: black;
+}
 #input_name {
 	position: absolute;
 	left: 0;
@@ -24,10 +27,21 @@ Click fast
 	font-size: 20px;
 	outline:0;
 }
+
+#orientation_message {
+	color: white;
+	font-size: 36px;
+	font-family: sans-serif;
+	text-align: center;
+	margin-top: 20vh;
+}
 </style>
 <body>
-	<input id="input_name" placeholder="Name..." type="text" hidden></input>
-	<div id="game_container"></div>
+
+	<div id="game_container" hidden>
+		<input id="input_name" placeholder="Name..." type="text" hidden></input>
+	</div>
+	<div id="orientation_message">Rotate device</div>
 	<script src="js/lib/phaser.min.js"></script>
 	<script src="js/lib/socket.io.min.js"></script>
 
