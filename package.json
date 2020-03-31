@@ -2,7 +2,7 @@
     "name": "click-race-server",
     "main": "index.js",
     "engines": {
-      "node": "11.2.0"
+        "node": "11.2.0"
     },
     "dependencies": {
         "express": "4.14.0",
